@@ -93,6 +93,8 @@ cd sql-warehouse-project
 
 > **DESTRUCTIVE WARNING:** `scripts/init_database.sql` drops the `DataWarehouse` database if it exists and recreates it from scratch. **All existing data will be permanently lost.** Only run this script on a fresh installation or when a complete rebuild is explicitly required.
 
+For non-destructive bootstrap (recommended outside local rebuild scenarios), run `scripts/init_database_safe.sql` instead.
+
 1. Open SSMS and connect to your SQL Server instance.
 2. Open `scripts/init_database.sql`.
 3. Review the script. Read the WARNING comment block in the file.

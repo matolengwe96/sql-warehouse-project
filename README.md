@@ -18,8 +18,8 @@ The project follows the **Medallion Architecture** with three progressive data l
 │  │  Raw ingest  │───►│  Cleansed &  │───►│  Star Schema           │    │
 │  │  1-to-1 with │    │  standardised│    │  dim_customers         │    │
 │  │  source CSVs │    │  conformed   │    │  dim_products          │    │
-│  │              │    │  typed data  │    │  dim_date              │    │
-│  └──────────────┘    └──────────────┘    │  fact_sales            │    │
+│  │              │    │  typed data  │    │  fact_sales            │    │
+│  └──────────────┘    └──────────────┘    │                        │    │
 │                                          └────────────────────────┘    │
 │  Source: ERP (CSV)                                                      │
 │  Source: CRM (CSV)                                                      │
@@ -40,7 +40,7 @@ This project demonstrates an end-to-end enterprise data warehousing solution:
 
 1. **Data Architecture** — Modern medallion design on SQL Server with clearly separated Bronze, Silver, and Gold schemas.
 2. **ETL Pipelines** — Stored procedures perform full-refresh loads at each layer: `BULK INSERT` at Bronze, transformation logic at Silver, and join/surrogate-key generation at Gold.
-3. **Data Modelling** — Star schema with a central `fact_sales` table and three dimension tables (`dim_customers`, `dim_products`, `dim_date`), optimised for analytical query patterns.
+3. **Data Modelling** — Star schema with a central `fact_sales` view and conformed dimensions (`dim_customers`, `dim_products`), optimised for analytical query patterns.
 4. **Data Quality** — Explicit cleansing rules, deduplication, referential integrity checks, and a test suite in `tests/`.
 5. **Analytics & Reporting** — Gold schema supports customer segmentation, product performance analysis, and time-series sales trend reporting.
 
@@ -110,6 +110,7 @@ sql-warehouse-project/
 │   ├── 00_run_end_to_end.sql          # One-click SQLCMD runner for full build + checks
 │   ├── 01_run_incremental_rerun.sql   # One-click SQLCMD runner for non-destructive refresh
 │   ├── init_database.sql               # Creates DataWarehouse DB and bronze/silver/gold schemas
+│   ├── init_database_safe.sql          # Non-destructive DB/schema bootstrap
 │   ├── bronze/
 │   │   ├── ddl_bronze.sql              # DDL for all 6 Bronze tables
 │   │   └── proc_load_bronze.sql        # Stored procedures: BULK INSERT from CSV
@@ -160,6 +161,12 @@ scripts/init_database.sql
 ```
 
 > ⚠️ **Warning:** This script drops and recreates the `DataWarehouse` database. Never run it against an environment with data you need to keep. See [docs/runbook.md](docs/runbook.md) for safe procedures.
+
+Safe alternative (non-destructive):
+
+```
+scripts/init_database_safe.sql
+```
 
 **3. Place source CSV files**
 
@@ -218,29 +225,19 @@ For the complete execution guide, including re-run procedures and troubleshootin
 The Gold layer implements a **star schema** optimised for analytical queries:
 
 ```
-                         ┌─────────────────┐
-                         │   dim_date      │
-                         │  date_key (PK)  │
-                         │  full_date      │
-                         │  year           │
-                         │  quarter        │
-                         │  month          │
-                         │  is_weekend     │
-                         └────────┬────────┘
-                                  │ order_date_key FK
-                                  │
-┌──────────────────┐    ┌─────────▼─────────┐    ┌─────────────────────┐
+┌──────────────────┐    ┌────────────────────┐    ┌─────────────────────┐
 │  dim_customers   │    │    fact_sales      │    │    dim_products     │
-│ customer_key(PK) ├────┤  order_number(NK)  ├────┤  product_key (PK)  │
+│ customer_key(PK) ├────┤  order_number      ├────┤  product_key (PK)  │
 │  customer_id     │    │  customer_key(FK)  │    │  product_id         │
 │  customer_number │    │  product_key(FK)   │    │  product_number     │
-│  first_name      │    │  order_date_key(FK)│    │  product_name       │
-│  last_name       │    │  ship_date_key(FK) │    │  category           │
-│  country         │    │  due_date_key(FK)  │    │  subcategory        │
-│  marital_status  │    │  sales_amount      │    │  product_line       │
-│  gender          │    │  quantity          │    │  product_cost       │
-│  birthdate       │    │  unit_price        │    │  product_start_date │
-└──────────────────┘    └────────────────────┘    └─────────────────────┘
+│  first_name      │    │  order_date        │    │  product_name       │
+│  last_name       │    │  shipping_date     │    │  category           │
+│  country         │    │  due_date          │    │  subcategory        │
+│  marital_status  │    │  sales_amount      │    │  maintenance        │
+│  gender          │    │  quantity          │    │  cost               │
+│  birthdate       │    │  price             │    │  product_line       │
+└──────────────────┘    └────────────────────┘    │  start_date         │
+                                                  └─────────────────────┘
 ```
 
 ---
@@ -283,14 +280,14 @@ The Gold layer is designed to answer the following business questions directly:
 
 ## 🔄 Project Status
 
-| Phase | Description                                   | Status         |
-| ----- | --------------------------------------------- | -------------- |
-| 1     | Documentation & architecture design           | ✅ Complete    |
-| 2     | Database initialisation (`init_database.sql`) | ✅ Complete    |
-| 3     | Bronze layer — DDL + load procedures          | 🔄 In Progress |
-| 4     | Silver layer — cleansing procedures           | 📋 Planned     |
-| 5     | Gold layer — star-schema scripts              | 📋 Planned     |
-| 6     | Data quality test scripts                     | 📋 Planned     |
+| Phase | Description                                   | Status      |
+| ----- | --------------------------------------------- | ----------- |
+| 1     | Documentation & architecture design           | ✅ Complete |
+| 2     | Database initialisation (`init_database.sql`) | ✅ Complete |
+| 3     | Bronze layer — DDL + load procedures          | ✅ Complete |
+| 4     | Silver layer — cleansing procedures           | ✅ Complete |
+| 5     | Gold layer — star-schema scripts              | ✅ Complete |
+| 6     | Data quality test scripts                     | ✅ Complete |
 
 ---
 
