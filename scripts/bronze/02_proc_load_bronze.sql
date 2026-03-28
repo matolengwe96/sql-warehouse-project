@@ -20,8 +20,8 @@ Configuration:
     must have read access to those paths.
 
     Example:
-        @csv_path_crm = 'C:\sql\dwh\datasets\source_crm\'
-        @csv_path_erp = 'C:\sql\dwh\datasets\source_erp\'
+        @csv_path_crm = 'C:\Users\CONDORGREEN\Downloads\sql-warehouse-project\sql-warehouse-project\datasets\source_crm\'
+        @csv_path_erp = 'C:\Users\CONDORGREEN\Downloads\sql-warehouse-project\sql-warehouse-project\datasets\source_erp\'
 
 Execution Order:
     4 of 8  —  Run after 03_bronze/01_ddl_bronze_tables.sql.
@@ -49,8 +49,8 @@ BEGIN
     -- =========================================================================
     -- CONFIGURATION — Update these two paths before first execution
     -- =========================================================================
-    DECLARE @csv_path_crm NVARCHAR(500) = 'C:\sql\dwh\datasets\source_crm\';
-    DECLARE @csv_path_erp NVARCHAR(500) = 'C:\sql\dwh\datasets\source_erp\';
+    DECLARE @csv_path_crm NVARCHAR(500) = 'C:\Users\CONDORGREEN\Downloads\sql-warehouse-project\sql-warehouse-project\datasets\source_crm\';
+    DECLARE @csv_path_erp NVARCHAR(500) = 'C:\Users\CONDORGREEN\Downloads\sql-warehouse-project\sql-warehouse-project\datasets\source_erp\';
     -- =========================================================================
 
     DECLARE @batch_id    UNIQUEIDENTIFIER = NEWID();
