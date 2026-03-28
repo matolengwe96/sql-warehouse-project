@@ -34,6 +34,14 @@ IF OBJECT_ID('etl.vw_latest_load_summary', 'V') IS NOT NULL
     DROP VIEW etl.vw_latest_load_summary;
 GO
 
+IF OBJECT_ID('etl.vw_latest_pipeline_run', 'V') IS NOT NULL
+    DROP VIEW etl.vw_latest_pipeline_run;
+GO
+
+IF OBJECT_ID('etl.pipeline_run_log', 'U') IS NOT NULL
+    DROP TABLE etl.pipeline_run_log;
+GO
+
 IF OBJECT_ID('etl.load_log', 'U') IS NOT NULL
     DROP TABLE etl.load_log;
 GO
@@ -61,6 +69,25 @@ CREATE NONCLUSTERED INDEX ix_load_log_batch_id
     INCLUDE (layer, table_name, status, row_count, duration_seconds);
 GO
 
+CREATE TABLE etl.pipeline_run_log (
+    pipeline_run_id    INT               IDENTITY(1,1) NOT NULL
+                                            CONSTRAINT pk_pipeline_run_log PRIMARY KEY CLUSTERED,
+    pipeline_batch_id  UNIQUEIDENTIFIER  NOT NULL,
+    run_type           NVARCHAR(30)      NOT NULL,  -- Full | Incremental | Manual
+    started_at         DATETIME          NOT NULL,
+    ended_at           DATETIME          NULL,
+    status             NVARCHAR(20)      NOT NULL,  -- Running | Completed | Failed
+    error_message      NVARCHAR(MAX)     NULL,
+    created_at         DATETIME          NOT NULL
+                                            CONSTRAINT df_pipeline_run_log_created_at DEFAULT GETDATE()
+);
+GO
+
+CREATE NONCLUSTERED INDEX ix_pipeline_run_log_batch
+    ON etl.pipeline_run_log (pipeline_batch_id)
+    INCLUDE (run_type, status, started_at, ended_at);
+GO
+
 -- View: most recent load result per table (quick health-check)
 CREATE VIEW etl.vw_latest_load_summary AS
 SELECT
@@ -78,4 +105,17 @@ WHERE el.log_id = (
     FROM   etl.load_log
     WHERE  table_name = el.table_name
 );
+GO
+
+CREATE VIEW etl.vw_latest_pipeline_run AS
+SELECT TOP (1)
+    pipeline_run_id,
+    pipeline_batch_id,
+    run_type,
+    started_at,
+    ended_at,
+    status,
+    error_message
+FROM etl.pipeline_run_log
+ORDER BY pipeline_run_id DESC;
 GO

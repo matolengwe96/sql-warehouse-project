@@ -124,6 +124,9 @@ sql-warehouse-project/
 │       └── 02_proc_run_full_pipeline.sql # Full pipeline orchestrator (Bronze -> Silver)
 │
 ├── tests/                              # Data quality and reconciliation scripts
+│   ├── quality_checks_bronze.sql       # Bronze ingestion quality checks
+│   ├── quality_checks_silver.sql       # Silver quality checks
+│   └── quality_checks_gold.sql         # Gold integrity checks
 │
 ├── README.md
 └── LICENSE
@@ -199,6 +202,14 @@ scripts/gold/ddl_gold.sql
 ```
 
 For the complete execution guide, including re-run procedures and troubleshooting, see [docs/runbook.md](docs/runbook.md).
+
+### Operational Monitoring
+
+- Table-level load telemetry is stored in `etl.load_log`.
+- Pipeline-level run status is stored in `etl.pipeline_run_log`.
+- Latest status views:
+  - `etl.vw_latest_load_summary`
+  - `etl.vw_latest_pipeline_run`
 
 ---
 

@@ -331,7 +331,11 @@ When new source CSV files are received and a full reload is required:
 
 ## 8. Data Quality Checks
 
-Run these queries after every load to confirm data integrity. Queries are also available in `tests/`.
+Run these queries after every load to confirm data integrity. Queries are also available in `tests/`:
+
+- `tests/quality_checks_bronze.sql`
+- `tests/quality_checks_silver.sql`
+- `tests/quality_checks_gold.sql`
 
 ### 7.1 Bronze Null Check
 

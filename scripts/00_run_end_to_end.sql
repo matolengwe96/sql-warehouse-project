@@ -48,6 +48,7 @@ EXEC silver.usp_silver_load_all;
 GO
 
 -- 7) Execute data quality checks
+:r ..\tests\quality_checks_bronze.sql
 :r ..\tests\quality_checks_silver.sql
 :r ..\tests\quality_checks_gold.sql
 

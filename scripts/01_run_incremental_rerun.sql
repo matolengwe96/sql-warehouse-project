@@ -39,6 +39,7 @@ EXEC gold.usp_gold_load_all;
 GO
 
 -- 3) Execute quality checks
+:r ..\tests\quality_checks_bronze.sql
 :r ..\tests\quality_checks_silver.sql
 :r ..\tests\quality_checks_gold.sql
 
