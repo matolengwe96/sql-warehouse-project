@@ -42,16 +42,17 @@ EXEC silver.usp_silver_load_all;
 
 1. [Prerequisites](#1-prerequisites)
 2. [Initial Environment Setup](#2-initial-environment-setup)
-3. [Repository Layout and Execution Order](#3-repository-layout-and-execution-order)
-4. [Initial Full Load](#4-initial-full-load)
-5. [Re-running a Full Load](#5-re-running-a-full-load)
-6. [Layer-by-Layer Procedures](#6-layer-by-layer-procedures)
-7. [Data Quality Checks](#7-data-quality-checks)
-8. [Troubleshooting](#8-troubleshooting)
-9. [Maintenance Tasks](#9-maintenance-tasks)
-10. [Environment-specific Notes](#10-environment-specific-notes)
-11. [Failure and Recovery Decision Tree](#11-failure-and-recovery-decision-tree)
-12. [Related Documents](#12-related-documents)
+3. [One-Click End-to-End Run](#3-one-click-end-to-end-run)
+4. [Repository Layout and Execution Order](#4-repository-layout-and-execution-order)
+5. [Initial Full Load](#5-initial-full-load)
+6. [Re-running a Full Load](#6-re-running-a-full-load)
+7. [Layer-by-Layer Procedures](#7-layer-by-layer-procedures)
+8. [Data Quality Checks](#8-data-quality-checks)
+9. [Troubleshooting](#9-troubleshooting)
+10. [Maintenance Tasks](#10-maintenance-tasks)
+11. [Environment-specific Notes](#11-environment-specific-notes)
+12. [Failure and Recovery Decision Tree](#12-failure-and-recovery-decision-tree)
+13. [Related Documents](#13-related-documents)
 
 ---
 
@@ -71,7 +72,7 @@ Before running any scripts, confirm the following on the target SQL Server insta
 
 1. **TCP/IP is enabled** (SQL Server Configuration Manager → SQL Server Network Configuration → Protocols).
 2. **SQL Server Agent** is running (required only if scheduling jobs in a later phase; not needed for manual runs).
-3. **`sa` or a sysadmin account** is available for initial database creation. After setup, a least-privilege service account should be used (see [Section 10](#10-environment-specific-notes)).
+3. **`sa` or a sysadmin account** is available for initial database creation. After setup, a least-privilege service account should be used (see [Section 11](#11-environment-specific-notes)).
 4. **File system access**: The SQL Server service account must have `READ` permission on the folder where CSV files are stored (for `BULK INSERT`). See [Section 2.3](#23-grant-bulk-insert-file-access).
 
 ---
@@ -153,7 +154,19 @@ File format requirements:
 
 ---
 
-## 3. Repository Layout and Execution Order
+## 3. One-Click End-to-End Run
+
+For local development, you can run the entire pipeline from a single script.
+
+1. Open `scripts/00_run_end_to_end.sql` in SSMS.
+2. Enable SQLCMD Mode: `Query -> SQLCMD Mode`.
+3. Execute the script (`F5`).
+
+This runner executes setup, Bronze/Silver/Gold object creation, data loads, and quality checks in order.
+
+---
+
+## 4. Repository Layout and Execution Order
 
 Scripts must be run in this order within each layer. Never run a higher layer without completing the layer below it.
 
@@ -178,7 +191,7 @@ scripts/
 
 ---
 
-## 4. Initial Full Load
+## 5. Initial Full Load
 
 Run all steps in sequence. Each step should complete with no errors before proceeding to the next.
 
@@ -263,7 +276,7 @@ WHERE c.customer_key IS NULL;
 
 ---
 
-## 5. Re-running a Full Load
+## 6. Re-running a Full Load
 
 When new source CSV files are received and a full reload is required:
 
@@ -280,13 +293,13 @@ When new source CSV files are received and a full reload is required:
    ```sql
    EXEC gold.usp_gold_load_fact_sales;
    ```
-5. Run the data quality checks in [Section 7](#7-data-quality-checks).
+5. Run the data quality checks in [Section 8](#8-data-quality-checks).
 
 > **Note:** The `init_database.sql` script should **NOT** be re-run as part of a normal reload. It is a destructive rebuild script. For reloads, run only the layer load procedures.
 
 ---
 
-## 6. Layer-by-Layer Procedures
+## 7. Layer-by-Layer Procedures
 
 ### Bronze Layer
 
@@ -311,7 +324,7 @@ When new source CSV files are received and a full reload is required:
 
 ---
 
-## 7. Data Quality Checks
+## 8. Data Quality Checks
 
 Run these queries after every load to confirm data integrity. Queries are also available in `tests/`.
 
@@ -395,7 +408,7 @@ SELECT
 
 ---
 
-## 8. Troubleshooting
+## 9. Troubleshooting
 
 ### BULK INSERT Fails with "Cannot bulk load because the file could not be opened"
 
@@ -464,12 +477,12 @@ SELECT
 
 1. Immediately notify the team.
 2. Restore from backup if the environment had data that wasn't in the source CSVs.
-3. If this is a development environment with no external data, re-run the full initial load sequence from [Section 4](#4-initial-full-load).
+3. If this is a development environment with no external data, re-run the full initial load sequence from [Section 5](#5-initial-full-load).
 4. To prevent recurrence: add a guard variable to `init_database.sql` that requires a explicit confirmation string before proceeding.
 
 ---
 
-## 9. Maintenance Tasks
+## 10. Maintenance Tasks
 
 ### Update CSV Source Files
 
@@ -510,7 +523,7 @@ EXEC gold.usp_gold_load_fact_sales;
 
 ---
 
-## 10. Environment-specific Notes
+## 11. Environment-specific Notes
 
 ### Development (Local Machine)
 
@@ -537,7 +550,7 @@ EXEC gold.usp_gold_load_fact_sales;
 
 ---
 
-## 11. Failure and Recovery Decision Tree
+## 12. Failure and Recovery Decision Tree
 
 ```
 ETL Run Fails
@@ -563,12 +576,12 @@ ETL Run Fails
 1. Identify the first failing layer (Bronze, Silver, or Gold).
 2. Fix the underlying cause (file, code, or data issue).
 3. Re-run from the failing layer downward — you do **not** need to reload layers above the failure.
-4. Always run data quality checks from [Section 7](#7-data-quality-checks) after recovery.
+4. Always run data quality checks from [Section 8](#8-data-quality-checks) after recovery.
 5. Log the incident in your team's change log with: timestamp, root cause, rows affected, and resolution.
 
 ---
 
-## 12. Related Documents
+## 13. Related Documents
 
 | Document                                                        | Purpose                                           |
 | --------------------------------------------------------------- | ------------------------------------------------- |

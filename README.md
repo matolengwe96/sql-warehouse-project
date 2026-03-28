@@ -107,6 +107,7 @@ sql-warehouse-project/
 │   └── runbook.md                      # Deployment, load, re-run, and troubleshooting guide
 │
 ├── scripts/
+│   ├── 00_run_end_to_end.sql          # One-click SQLCMD runner for full build + checks
 │   ├── init_database.sql               # Creates DataWarehouse DB and bronze/silver/gold schemas
 │   ├── bronze/
 │   │   ├── ddl_bronze.sql              # DDL for all 6 Bronze tables
@@ -164,6 +165,15 @@ datasets/source_crm/   ← cust_info.csv, prd_info.csv, sales_details.csv
 ```
 
 **4. Load Bronze → Silver → Gold**
+
+Fastest option (recommended):
+
+```sql
+-- In SSMS, open scripts/00_run_end_to_end.sql
+-- Enable SQLCMD Mode (Query -> SQLCMD Mode), then run.
+```
+
+Manual option:
 
 ```sql
 -- Step 1: Create and load Bronze
