@@ -32,6 +32,9 @@ EXEC silver.usp_silver_load_all;
 EXEC bronze.usp_bronze_load_all;
 EXEC silver.usp_silver_load_all;
 -- Gold views refresh automatically on query.
+
+-- Or run one-click non-destructive refresh:
+-- scripts/01_run_incremental_rerun.sql (SQLCMD Mode)
 ```
 
 > ⚠️ **Never re-run `init_database.sql` as part of a normal reload.** It is a destructive rebuild script.
@@ -163,6 +166,8 @@ For local development, you can run the entire pipeline from a single script.
 3. Execute the script (`F5`).
 
 This runner executes setup, Bronze/Silver/Gold object creation, data loads, and quality checks in order.
+
+For non-destructive refreshes after source file updates, use `scripts/01_run_incremental_rerun.sql` (also in SQLCMD Mode).
 
 ---
 

@@ -108,6 +108,7 @@ sql-warehouse-project/
 │
 ├── scripts/
 │   ├── 00_run_end_to_end.sql          # One-click SQLCMD runner for full build + checks
+│   ├── 01_run_incremental_rerun.sql   # One-click SQLCMD runner for non-destructive refresh
 │   ├── init_database.sql               # Creates DataWarehouse DB and bronze/silver/gold schemas
 │   ├── bronze/
 │   │   ├── ddl_bronze.sql              # DDL for all 6 Bronze tables
@@ -170,6 +171,13 @@ Fastest option (recommended):
 
 ```sql
 -- In SSMS, open scripts/00_run_end_to_end.sql
+-- Enable SQLCMD Mode (Query -> SQLCMD Mode), then run.
+```
+
+Non-destructive refresh option:
+
+```sql
+-- In SSMS, open scripts/01_run_incremental_rerun.sql
 -- Enable SQLCMD Mode (Query -> SQLCMD Mode), then run.
 ```
 
