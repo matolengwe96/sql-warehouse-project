@@ -245,6 +245,22 @@ Use this checklist for portfolio demos and stakeholder walkthroughs.
 
 ---
 
+## 🚢 v1.0 Release Readiness Checklist
+
+Use this checklist before tagging a release or presenting the project to stakeholders.
+
+- `scripts/00_run_end_to_end.sql` executes successfully in SQLCMD Mode
+- `scripts/01_run_incremental_rerun.sql` executes successfully in SQLCMD Mode
+- `tests/quality_checks_bronze.sql` returns no critical failures
+- `tests/quality_checks_silver.sql` returns no critical failures
+- `tests/quality_checks_gold.sql` returns no referential integrity failures
+- `etl.vw_latest_pipeline_run` shows latest status as `Completed`
+- `etl.vw_latest_load_summary` shows no table with latest status `Failed`
+- README, runbook, data catalog, and source-to-target mapping are synchronized
+- Commit history includes phase-based checkpoints with clear messages
+
+---
+
 ## 📊 Data Model
 
 The Gold layer implements a **star schema** optimised for analytical queries:
