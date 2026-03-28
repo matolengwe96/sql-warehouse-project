@@ -290,17 +290,17 @@ When new source CSV files are received and a full reload is required:
 
 ### Bronze Layer
 
-| Procedure                         | Action                                           |
-| --------------------------------- | ------------------------------------------------ |
-| `EXEC bronze.load_bronze`         | Main Bronze load procedure                       |
-| `EXEC bronze.usp_bronze_load_all` | Wrapper alias used by docs/runbook               |
+| Procedure                         | Action                             |
+| --------------------------------- | ---------------------------------- |
+| `EXEC bronze.load_bronze`         | Main Bronze load procedure         |
+| `EXEC bronze.usp_bronze_load_all` | Wrapper alias used by docs/runbook |
 
 ### Silver Layer
 
-| Procedure                         | Action                                           |
-| --------------------------------- | ------------------------------------------------ |
-| `EXEC silver.load_silver`         | Main Silver load procedure                       |
-| `EXEC silver.usp_silver_load_all` | Wrapper alias used by docs/runbook               |
+| Procedure                         | Action                             |
+| --------------------------------- | ---------------------------------- |
+| `EXEC silver.load_silver`         | Main Silver load procedure         |
+| `EXEC silver.usp_silver_load_all` | Wrapper alias used by docs/runbook |
 
 ### Gold Layer
 
