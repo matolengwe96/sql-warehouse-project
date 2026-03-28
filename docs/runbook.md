@@ -18,13 +18,14 @@ For experienced operators who know the environment is already configured:
 ```sql
 -- Full load from scratch (run in order):
 -- 1. scripts/init_database.sql            ← ONE-TIME ONLY — destroys existing DB
--- 2. scripts/bronze/01_ddl_bronze_tables.sql
--- 3. scripts/bronze/02_proc_load_bronze.sql
+-- 2. scripts/etl/01_ddl_etl_log.sql
+-- 3. scripts/bronze/ddl_bronze.sql
+-- 4. scripts/bronze/proc_load_bronze.sql
 EXEC bronze.usp_bronze_load_all;
--- 4. scripts/silver/01_ddl_silver_tables.sql
--- 5. scripts/silver/02_proc_load_silver.sql
+-- 5. scripts/silver/ddl_silver.sql
+-- 6. scripts/silver/proc_load_silver.sql
 EXEC silver.usp_silver_load_all;
--- 6. scripts/gold/01_ddl_gold_views.sql
+-- 7. scripts/gold/ddl_gold.sql
 -- Done. Query gold.dim_customers, gold.dim_products, gold.fact_sales.
 
 -- Re-run existing load (no DDL changes):
@@ -104,8 +105,8 @@ After execution, the following should exist:
 ```sql
 -- Verify
 USE DataWarehouse;
-SELECT name FROM sys.schemas WHERE name IN ('bronze', 'silver', 'gold');
--- Expected: 3 rows
+SELECT name FROM sys.schemas WHERE name IN ('bronze', 'silver', 'gold', 'etl');
+-- Expected: 4 rows
 ```
 
 ### 2.3 Grant BULK INSERT File Access
@@ -135,13 +136,11 @@ datasets/
 ├── source_erp/
 │   ├── CUST_AZ12.csv
 │   ├── LOC_A101.csv
-│   ├── PX_CAT_G1V2.csv
-│   ├── PRD_INFO.csv
-│   └── SALES_DETAILS.csv
+│   └── PX_CAT_G1V2.csv
 └── source_crm/
-    ├── CUST_INFO.csv
-    ├── PRD_INFO.csv
-    └── SALES_DETAILS.csv
+  ├── cust_info.csv
+  ├── prd_info.csv
+  └── sales_details.csv
 ```
 
 File format requirements:
@@ -161,18 +160,20 @@ Scripts must be run in this order within each layer. Never run a higher layer wi
 ```
 scripts/
 ├── init_database.sql             ← Step 0: Run once to create DB and schemas
+├── etl/
+│   └── 01_ddl_etl_log.sql        ← Step 1: Create ETL logging table
 │
 ├── bronze/
-│   ├── 01_ddl_bronze_tables.sql  ← Step 1: Create Bronze tables
-│   └── 02_proc_load_all.sql      ← Step 2: Create Bronze load procedures
+│   ├── ddl_bronze.sql            ← Step 2: Create Bronze tables
+│   └── proc_load_bronze.sql      ← Step 3: Create Bronze load procedures
 │
 ├── silver/
-│   ├── 01_ddl_silver_tables.sql  ← Step 3: Create Silver tables
-│   └── 02_proc_load_all.sql      ← Step 4: Create Silver load procedures
+│   ├── ddl_silver.sql            ← Step 4: Create Silver tables
+│   └── proc_load_silver.sql      ← Step 5: Create Silver load procedures
 │
 └── gold/
-    ├── 01_ddl_gold_views.sql     ← Step 5: Create Gold views/tables
-    └── 02_proc_load_fact_sales.sql ← Step 6: Create Gold fact load procedure
+  ├── ddl_gold.sql              ← Step 6: Create Gold views
+  └── 02_proc_load_gold.sql     ← Step 7: Gold compatibility procedures
 ```
 
 ---
@@ -191,13 +192,14 @@ scripts/init_database.sql
 ### Step 1 — Create Bronze Tables
 
 ```sql
-scripts/bronze/01_ddl_bronze_tables.sql
+scripts/etl/01_ddl_etl_log.sql
+scripts/bronze/ddl_bronze.sql
 ```
 
 ### Step 2 — Create and Execute Bronze Load
 
 ```sql
-scripts/bronze/02_proc_load_all.sql
+scripts/bronze/proc_load_bronze.sql
 
 -- After creating the procedures, execute the master load:
 USE DataWarehouse;
@@ -210,8 +212,6 @@ Expected: Row counts appear in the output for each Bronze table. Verify with:
 SELECT 'bronze.erp_cust_az12'   AS tbl, COUNT(*) AS rows FROM bronze.erp_cust_az12
 UNION ALL SELECT 'bronze.erp_loc_a101',       COUNT(*) FROM bronze.erp_loc_a101
 UNION ALL SELECT 'bronze.erp_px_cat_g1v2',    COUNT(*) FROM bronze.erp_px_cat_g1v2
-UNION ALL SELECT 'bronze.erp_prd_info',       COUNT(*) FROM bronze.erp_prd_info
-UNION ALL SELECT 'bronze.erp_sales_details',  COUNT(*) FROM bronze.erp_sales_details
 UNION ALL SELECT 'bronze.crm_cust_info',      COUNT(*) FROM bronze.crm_cust_info
 UNION ALL SELECT 'bronze.crm_prd_info',       COUNT(*) FROM bronze.crm_prd_info
 UNION ALL SELECT 'bronze.crm_sales_details',  COUNT(*) FROM bronze.crm_sales_details;
@@ -222,13 +222,13 @@ All row counts must be > 0.
 ### Step 3 — Create Silver Tables
 
 ```sql
-scripts/silver/01_ddl_silver_tables.sql
+scripts/silver/ddl_silver.sql
 ```
 
 ### Step 4 — Create and Execute Silver Load
 
 ```sql
-scripts/silver/02_proc_load_all.sql
+scripts/silver/proc_load_silver.sql
 
 EXEC silver.usp_silver_load_all;
 ```
@@ -236,7 +236,7 @@ EXEC silver.usp_silver_load_all;
 ### Step 5 — Create Gold Objects
 
 ```sql
-scripts/gold/01_ddl_gold_views.sql
+scripts/gold/ddl_gold.sql
 ```
 
 ### Step 6 — Verify Gold Layer
@@ -245,7 +245,6 @@ scripts/gold/01_ddl_gold_views.sql
 -- Smoke test
 SELECT TOP 10 * FROM gold.dim_customers;
 SELECT TOP 10 * FROM gold.dim_products;
-SELECT TOP 5  * FROM gold.dim_date;
 SELECT TOP 10 * FROM gold.fact_sales;
 
 -- Referential integrity check
@@ -291,31 +290,24 @@ When new source CSV files are received and a full reload is required:
 
 ### Bronze Layer
 
-| Procedure                                       | Action                                           |
-| ----------------------------------------------- | ------------------------------------------------ |
-| `EXEC bronze.usp_bronze_load_all`               | Truncate and reload all 8 Bronze tables from CSV |
-| `EXEC bronze.usp_bronze_load_erp_cust_az12`     | Reload only `bronze.erp_cust_az12`               |
-| `EXEC bronze.usp_bronze_load_erp_loc_a101`      | Reload only `bronze.erp_loc_a101`                |
-| `EXEC bronze.usp_bronze_load_erp_px_cat_g1v2`   | Reload only `bronze.erp_px_cat_g1v2`             |
-| `EXEC bronze.usp_bronze_load_erp_prd_info`      | Reload only `bronze.erp_prd_info`                |
-| `EXEC bronze.usp_bronze_load_erp_sales_details` | Reload only `bronze.erp_sales_details`           |
-| `EXEC bronze.usp_bronze_load_crm_cust_info`     | Reload only `bronze.crm_cust_info`               |
-| `EXEC bronze.usp_bronze_load_crm_prd_info`      | Reload only `bronze.crm_prd_info`                |
-| `EXEC bronze.usp_bronze_load_crm_sales_details` | Reload only `bronze.crm_sales_details`           |
+| Procedure                         | Action                                           |
+| --------------------------------- | ------------------------------------------------ |
+| `EXEC bronze.load_bronze`         | Main Bronze load procedure                       |
+| `EXEC bronze.usp_bronze_load_all` | Wrapper alias used by docs/runbook               |
 
 ### Silver Layer
 
-| Procedure                                        | Action                                              |
-| ------------------------------------------------ | --------------------------------------------------- |
-| `EXEC silver.usp_silver_load_all`                | Truncate and reload all 8 Silver tables from Bronze |
-| `EXEC silver.usp_silver_load_erp_cust_az12`      | Reload only `silver.erp_cust_az12`                  |
-| _(etc. — one procedure per table, same pattern)_ | —                                                   |
+| Procedure                         | Action                                           |
+| --------------------------------- | ------------------------------------------------ |
+| `EXEC silver.load_silver`         | Main Silver load procedure                       |
+| `EXEC silver.usp_silver_load_all` | Wrapper alias used by docs/runbook               |
 
 ### Gold Layer
 
-| Procedure                            | Action                                          |
-| ------------------------------------ | ----------------------------------------------- |
-| `EXEC gold.usp_gold_load_fact_sales` | Re-populate `gold.fact_sales` (if materialised) |
+| Procedure                            | Action                                               |
+| ------------------------------------ | ---------------------------------------------------- |
+| `EXEC gold.usp_gold_load_fact_sales` | Compatibility proc; validates Gold view availability |
+| `EXEC gold.usp_gold_load_all`        | Wrapper alias for full Gold compatibility run        |
 
 ---
 

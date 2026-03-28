@@ -44,8 +44,8 @@ This catalog is the authoritative reference for every table and view in the `Dat
 
 | Layer  | Schema   | Object Count   | Type                            | Loaded By                    |
 | ------ | -------- | -------------- | ------------------------------- | ---------------------------- |
-| Bronze | `bronze` | 8 tables       | Physical tables (raw ingestion) | `usp_bronze_load_all`        |
-| Silver | `silver` | 8 tables       | Physical tables (cleansed)      | `usp_silver_load_all`        |
+| Bronze | `bronze` | 6 tables       | Physical tables (raw ingestion) | `usp_bronze_load_all`        |
+| Silver | `silver` | 6 tables       | Physical tables (cleansed)      | `usp_silver_load_all`        |
 | Gold   | `gold`   | 4 views/tables | Star schema (analytical)        | Views or `usp_gold_load_all` |
 
 ---

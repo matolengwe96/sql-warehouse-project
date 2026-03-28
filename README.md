@@ -96,7 +96,7 @@ For full details, see [docs/requirements.md](docs/requirements.md).
 sql-warehouse-project/
 │
 ├── datasets/                           # Source CSV files (ERP and CRM data)
-│   ├── source_erp/                     # Raw ERP exports (5 files)
+│   ├── source_erp/                     # Raw ERP exports (3 files)
 │   └── source_crm/                     # Raw CRM exports (3 files)
 │
 ├── docs/                               # Project documentation
@@ -109,16 +109,17 @@ sql-warehouse-project/
 ├── scripts/
 │   ├── init_database.sql               # Creates DataWarehouse DB and bronze/silver/gold schemas
 │   ├── bronze/
-│   │   ├── 01_ddl_bronze_tables.sql    # DDL for all 8 Bronze tables
-│   │   └── 02_proc_load_bronze.sql     # Stored procedures: BULK INSERT from CSV
+│   │   ├── ddl_bronze.sql              # DDL for all 6 Bronze tables
+│   │   └── proc_load_bronze.sql        # Stored procedures: BULK INSERT from CSV
 │   ├── silver/
-│   │   ├── 01_ddl_silver_tables.sql    # DDL for all 8 Silver tables
-│   │   └── 02_proc_load_silver.sql     # Stored procedures: cleanse and load from Bronze
+│   │   ├── ddl_silver.sql              # DDL for all 6 Silver tables
+│   │   └── proc_load_silver.sql        # Stored procedures: cleanse and load from Bronze
 │   ├── gold/
-│   │   ├── 01_ddl_gold_views.sql       # Gold star-schema views/tables
-│   │   └── 02_proc_load_gold.sql       # Stored procedures: populate Gold from Silver
+│   │   ├── ddl_gold.sql                # Gold star-schema views
+│   │   └── 02_proc_load_gold.sql       # Compatibility procedures for Gold execution
 │   └── etl/
-│       └── 01_ddl_etl_log.sql          # ETL audit log table DDL
+│       ├── 01_ddl_etl_log.sql          # ETL audit log table DDL
+│       └── 02_proc_run_full_pipeline.sql # Full pipeline orchestrator (Bronze -> Silver)
 │
 ├── tests/                              # Data quality and reconciliation scripts
 │
@@ -158,25 +159,25 @@ scripts/init_database.sql
 **3. Place source CSV files**
 
 ```
-datasets/source_erp/   ← CUST_AZ12.csv, LOC_A101.csv, PX_CAT_G1V2.csv, PRD_INFO.csv, SALES_DETAILS.csv
-datasets/source_crm/   ← CUST_INFO.csv, PRD_INFO.csv, SALES_DETAILS.csv
+datasets/source_erp/   ← CUST_AZ12.csv, LOC_A101.csv, PX_CAT_G1V2.csv
+datasets/source_crm/   ← cust_info.csv, prd_info.csv, sales_details.csv
 ```
 
 **4. Load Bronze → Silver → Gold**
 
 ```sql
 -- Step 1: Create and load Bronze
-scripts/bronze/01_ddl_bronze_tables.sql
-scripts/bronze/02_proc_load_bronze.sql
+scripts/bronze/ddl_bronze.sql
+scripts/bronze/proc_load_bronze.sql
 EXEC bronze.usp_bronze_load_all;
 
 -- Step 2: Create and load Silver
-scripts/silver/01_ddl_silver_tables.sql
-scripts/silver/02_proc_load_silver.sql
+scripts/silver/ddl_silver.sql
+scripts/silver/proc_load_silver.sql
 EXEC silver.usp_silver_load_all;
 
 -- Step 3: Create Gold objects
-scripts/gold/01_ddl_gold_views.sql
+scripts/gold/ddl_gold.sql
 ```
 
 For the complete execution guide, including re-run procedures and troubleshooting, see [docs/runbook.md](docs/runbook.md).
