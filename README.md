@@ -218,6 +218,31 @@ For the complete execution guide, including re-run procedures and troubleshootin
   - `etl.vw_latest_load_summary`
   - `etl.vw_latest_pipeline_run`
 
+### Demo Validation Checklist
+
+Use this checklist for portfolio demos and stakeholder walkthroughs.
+
+- Database exists with required schemas: bronze, silver, gold, etl
+- Bronze load completes with non-zero row counts in all 6 tables
+- Silver load completes with no failed entries in `etl.load_log`
+- Gold views return data: `gold.dim_customers`, `gold.dim_products`, `gold.fact_sales`
+- Quality scripts run with no critical failures:
+  - `tests/quality_checks_bronze.sql`
+  - `tests/quality_checks_silver.sql`
+  - `tests/quality_checks_gold.sql`
+- Pipeline run status appears in `etl.pipeline_run_log` with `Completed`
+
+---
+
+## ✅ Delivery Highlights
+
+- Medallion architecture implemented with clear schema separation
+- Full-refresh ETL with structured error handling and audit logging
+- One-click SQLCMD runner for full rebuild and non-destructive refresh
+- Column-level lineage and catalog documentation aligned to code
+- Multi-layer data quality checks for ingestion and analytics integrity
+- Phase-based commit history suitable for technical portfolio review
+
 ---
 
 ## 📊 Data Model

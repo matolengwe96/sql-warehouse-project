@@ -55,7 +55,8 @@ EXEC silver.usp_silver_load_all;
 10. [Maintenance Tasks](#10-maintenance-tasks)
 11. [Environment-specific Notes](#11-environment-specific-notes)
 12. [Failure and Recovery Decision Tree](#12-failure-and-recovery-decision-tree)
-13. [Related Documents](#13-related-documents)
+13. [Architecture Decision Log](#13-architecture-decision-log)
+14. [Related Documents](#14-related-documents)
 
 ---
 
@@ -592,7 +593,22 @@ ETL Run Fails
 
 ---
 
-## 13. Related Documents
+## 13. Architecture Decision Log
+
+This section captures key design choices for governance and future enhancement planning.
+
+| Decision ID | Decision | Rationale | Current Impact | Future Option |
+| ----------- | -------- | --------- | -------------- | ------------- |
+| ADR-001 | Use medallion schemas (`bronze`, `silver`, `gold`) | Enforces progressive data quality and clear lineage boundaries | Easier troubleshooting and ownership by layer | Add semantic marts under Gold if business domains expand |
+| ADR-002 | Use SQL Server stored procedures for ETL | Keeps orchestration in-database with minimal external dependencies | Simple deployment for portfolio/demo environments | Integrate with SQL Agent, ADF, or Fabric orchestration later |
+| ADR-003 | Gold modeled as views (not physical tables) | Fast iteration and zero-latency refresh after Silver load | Lower storage overhead, simpler refresh cycle | Materialize Gold tables for performance at scale |
+| ADR-004 | Full-refresh loading strategy | Deterministic reruns and simple operational behavior | Easy recovery and predictable data state | Add incremental CDC logic when source volume grows |
+| ADR-005 | Dual run modes (`00_run_end_to_end`, `01_run_incremental_rerun`) | Supports both clean rebuilds and safe refreshes | Improved developer productivity and safer testing | Add environment-parameterized SQLCMD wrappers |
+| ADR-006 | ETL observability in `etl.load_log` and `etl.pipeline_run_log` | Provides auditable run history and failure visibility | Faster root-cause analysis and stakeholder transparency | Add alerting hooks and SLA dashboards |
+
+---
+
+## 14. Related Documents
 
 | Document                                                        | Purpose                                           |
 | --------------------------------------------------------------- | ------------------------------------------------- |
